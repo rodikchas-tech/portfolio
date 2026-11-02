@@ -1,8 +1,7 @@
-/* ---------- Настройки Telegram ----------
-   Пока пусто, форма работает в демо-режиме и ничего не отправляет.
-   Когда создашь бота, вставь токен и свой chat id между кавычками. */
-const BOT_TOKEN = "9277238274:AAGWAwEMvnBbVmTXHqjBLLqWNqdNUPqdidU";
-const CHAT_ID = "2050837969";
+/* ---------- Адрес сервера ----------
+   Сюда впиши адрес своего сервера на PythonAnywhere, с /send на конце.
+   Пример: https://rodion123.pythonanywhere.com/send */
+const SERVER_URL = "https://pochtisolewae.pythonanywhere.com/send";
 
 /* ---------- Проекты и фильтры ---------- */
 const list = document.getElementById("project-list");
@@ -111,36 +110,33 @@ form.addEventListener("submit", async event => {
     return;
   }
 
-  if (!BOT_TOKEN || !CHAT_ID) {
+  // Пока адрес сервера не вписан, работаем как демо-форма
+  if (SERVER_URL.includes("ИМЯ")) {
     setStatus("Форма пока в демо-режиме: сообщение никуда не отправлено.", "");
     return;
   }
-
-  const text =
-    "Новое сообщение с портфолио\n" +
-    "Имя: " + name + "\n" +
-    "Связь: " + contact + "\n" +
-    "Сообщение: " + message;
 
   submitButton.disabled = true;
   setStatus("Отправляю...", "");
 
   try {
-    const response = await fetch(
-      "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: text })
-      }
-    );
-    if (!response.ok) throw new Error("Ответ Telegram: " + response.status);
+    const response = await fetch(SERVER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ site: "portfolio", name: name, contact: contact, message: message })
+    });
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || !result.ok) {
+      setStatus(result.error || "Не удалось отправить. Попробуйте ещё раз чуть позже.", "error");
+      return;
+    }
 
     form.reset();
     setStatus("Сообщение отправлено. Отвечу, как только увижу.", "ok");
   } catch (error) {
     console.error(error);
-    setStatus("Не удалось отправить. Попробуйте ещё раз чуть позже.", "error");
+    setStatus("Нет связи с сервером. Попробуйте ещё раз чуть позже.", "error");
   } finally {
     submitButton.disabled = false;
   }
